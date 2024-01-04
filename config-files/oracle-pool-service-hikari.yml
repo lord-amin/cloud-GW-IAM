@@ -1,0 +1,9 @@
+logging:
+  level:
+    com.zaxxer: debug
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 200
+      minimum-idle: 50
+      connection-test-query: select * from dual

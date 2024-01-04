@@ -1,0 +1,43 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: config-service
+    instance_id: CS-SERVER-1
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  cloud:
+    config:
+      server:
+        prefix: /${spring.application.name}
+        native:
+          search-locations: file:./config-files
+    consul:
+      #ssh -L 8600:localhost:8500 tiddev@192.168.100.52
+      host: 192.168.102.82
+      port: 8099
+      discovery:
+        metadata:
+          configPath: ${spring.cloud.config.server.prefix}
+        service-name: ${spring.application.name}
+        instance-id: ${spring.application.name}:-${server.port}:${vcap.application.instance_id:${spring.application.instance_id:_1}}
+        prefer-ip-address: true
+        health-check-critical-timeout: 10s
+        register: true
+        heartbeat:
+          enabled: true
+  profiles:
+    active: native
+  output:
+    ansi:
+      enabled: always
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+logging:
+  pattern:
+    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){blue} %clr([%thread]){magenta} %clr(%level) %logger{36}.%clr(%M){magenta} [%clr(%line){magenta}] - %clr(%msg%n)'

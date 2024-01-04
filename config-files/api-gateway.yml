@@ -1,0 +1,51 @@
+app:
+  security:
+    ignorePathList: /actuator,/actuator/**,/login,/login/,/login/**,/webjars/*,/user-management/login,/test-service/login,/oauth2/token
+spring:
+  cloud:
+    gateway:
+      #      default-filters:
+      #        - TokenRelay
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: user-management
+          uri: lb://user-management
+          predicates:
+            - Path=/user-management/**
+          filters:
+            - RewritePath=/(?<path>.*), /$\{path}
+        - id: push-service
+          uri: lb://push-service
+          predicates:
+            - Path=/push-service/**
+          filters:
+            - RewritePath=/(?<path>.*), /$\{path}
+        - id: test-service
+          uri: lb://test-service
+          predicates:
+            - Path=/test-service/**
+          filters:
+            - RewritePath=/(?<path>.*), /$\{path}
+        - id: auth-service
+          uri: lb://authorization-service
+          predicates:
+            - Path=/oauth2/**
+          filters:
+            - RewritePath=/(?<path>.*), /$\{path}
+
+logging:
+  level:
+    root: info
+    org.apache.http: info
+    org.apache.tomcat: info
+    org.springframework.cloud.consul.discovery: info
+    org:
+      springframework: info
+#        security:
+#          web:
+#            FilterChainProxy: trace
+#            server: debug
+
+

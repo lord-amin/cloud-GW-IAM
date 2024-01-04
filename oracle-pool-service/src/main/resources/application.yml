@@ -1,0 +1,42 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: oracle-pool-service
+    instance_id: oracle-pool-service-1
+  profiles:
+    active: hikari
+  cloud:
+    consul:
+      host: 192.168.102.82
+      port: 8099
+      discovery:
+        register: true
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:-${server.port}:${vcap.application.instance_id:${spring.application.instance_id:_1}}
+        health-check-critical-timeout: 10s
+        heartbeat:
+          enabled: true
+    config:
+      discovery:
+        enabled: true
+        service-id: config-service
+  config:
+    import: 'optional:configserver:'
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  servlet:
+    multipart:
+      max-request-size: 300MB
+      max-file-size: 200MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

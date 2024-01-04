@@ -1,0 +1,7 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://authorization-service/
+          jwk-set-uri: http://authorization-service/oauth2/jwks

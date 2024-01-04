@@ -1,0 +1,28 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+    instance_id: GW-SERVER-1
+  main:
+    web-application-type: reactive
+  profiles:
+    active: spring
+  cloud:
+    consul:
+      host: 192.168.102.82
+      port: 8099
+      discovery:
+        register: true
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:-${server.port}:${vcap.application.instance_id:${spring.application.instance_id:_1}}
+        health-check-critical-timeout: 10s
+        heartbeat:
+          enabled: true
+    config:
+      discovery:
+        service-id: config-service
+        enabled: true
+  config:
+    import: 'optional:configserver:'
+

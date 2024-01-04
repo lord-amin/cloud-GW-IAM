@@ -1,0 +1,98 @@
+app:
+  security:
+    ignorePathList: '/swagger*,/*/api-docs/**,/actuator,/actuator/**,/login,/login/,/login/**,/webjars/**,/user-management/login,/test-service/login,/oauth2/token,/*/test'
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: test-service
+          uri: lb://test-service
+          predicates:
+            - Path=/test-service/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@myRateLimiter}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 100
+                #redis-rate-limiter.requestedTokens: 1
+            - name: CircuitBreaker
+              args:
+                name:     test-service-cb
+                fallbackUri: forward:/fallback
+        - id: authorization-service
+          uri: lb://authorization-service
+          predicates:
+            - Path=/oauth2/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@myRateLimiter}"
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 100
+                #redis-rate-limiter.requestedTokens: 1
+            - name: CircuitBreaker
+              args:
+                name: authorization-service-cb
+                fallbackUri: forward:/fallback-auth
+        - id: config-service
+          uri: lb://config-service
+          predicates:
+            - Path=/config-service/**
+  output:
+    ansi:
+      enabled: always
+  data:
+    redis:
+      host: 192.168.100.101
+      port: 6379
+
+management:
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+
+logging:
+  pattern:
+    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){blue} %clr([%thread]){magenta} %clr(%level) %logger{36}.%clr(%M){magenta} [%clr(%line){magenta}] - %clr(%msg%n)'
+  level:
+    root: info
+    io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine: debug
+    com.tiddev.apigateway.ratelimit.MyRedisRateLimiter: debug
+    com.tiddev.apigateway.ratelimit.RateLimitConfig: debug
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      sliding-window-type: TIME_BASED
+      slidingWindowSize: 10
+      failureRateThreshold: 40
+      minimumNumberOfCalls: 1
+      waitDurationInOpenState: 2s
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      permittedNumberOfCallsInHalfOpenState: 1
+      eventConsumerBufferSize: 10
+      re-exceptions:
+        - com.tiddev.apigateway.ratelimit.TooManyRequestsException
+    shared:
+      slidingWindowSize: 10
+      failureRateThreshold: 40
+  instances:
+    test-service-cb:
+      baseConfig: default
+    authorization-service-cb:
+      baseConfig: shared
+
+
+

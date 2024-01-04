@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    type: oracle.ucp.jdbc.PoolDataSource
+    oracleucp:
+      connection-factory-class-name: oracle.jdbc.pool.OracleDataSource
+      s-q-l-for-validate-connection: select * from dual
+      connection-pool-name: UcpPoolMain
+      initial-pool-size: 20
+      min-pool-size: 50
+      max-pool-size: 200
+logging:
+  level:
+    oracle:
+      ucp: info
